@@ -1,0 +1,38 @@
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOCKER_REGISTRY: registry.hub.docker.com
+
+jobs:
+  build-image:
+    strategy:
+      matrix:
+        build: [ normal, disable_gil, pypy ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.DOCKER_REGISTRY }}
+          username: ${{ vars.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          platforms: linux/amd64
+          file: ./${{ matrix.build }}.dockerfile
+          tags: registry.hub.docker.com/karta0910489/python-benchmark:${{ matrix.build }}
+          cache-from: type=registry,ref=registry.hub.docker.com/karta0910489/python-benchmark:${{ matrix.build }}-cache
+          cache-to: type=registry,ref=registry.hub.docker.com/karta0910489/python-benchmark:${{ matrix.build }}-cache,mode=max
