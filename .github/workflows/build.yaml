@@ -14,7 +14,7 @@ jobs:
   build-image:
     strategy:
       matrix:
-        build: [ normal, disable_gil, pypy ]
+        build: [ normal, disable_gil, pypy, go ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
